@@ -10,10 +10,21 @@ namespace LKParserTests
         public void InsertSelectFrom1Table()
         {
             Parser pParser = new Parser();
+            ParseResults r = pParser.Parse("INSERT INTO tablaUno SELECT * FROM tablaDos as t2");
+            Assert.Equal("[tablaUno]", r.TargetTable);
+            Assert.Single(r.SourceTables);
+            Assert.Contains("[tablaDos]", r.SourceTables);
+            Assert.False(r.HasWhereClause);
+        }
+        [Fact]
+        public void InsertSelectFrom1TableWhere()
+        {
+            Parser pParser = new Parser();
             ParseResults r = pParser.Parse("INSERT INTO tablaUno SELECT * FROM tablaDos as t2 WHERE t2.c3 = 55");
             Assert.Equal("[tablaUno]", r.TargetTable);
             Assert.Single(r.SourceTables);
             Assert.Contains("[tablaDos]", r.SourceTables);
+            Assert.True(r.HasWhereClause);
         }
         [Fact]
         public void InsertSelectFrom2CrossJoinedTables()
@@ -24,6 +35,18 @@ namespace LKParserTests
             Assert.Equal(2, r.SourceTables.Count);
             Assert.Contains("[tablaDos]", r.SourceTables);
             Assert.Contains("[tablaTres]", r.SourceTables);
+            Assert.False(r.HasWhereClause);
+        }
+        [Fact]
+        public void InsertSelectFrom2CrossJoinedTablesWhere()
+        {
+            Parser pParser = new Parser();
+            ParseResults r = pParser.Parse("INSERT INTO tablaUno SELECT * FROM tablaDos CROSS JOIN tablaTres WHERE tablaDos.c3 = tablaTres.c3");
+            Assert.Equal("[tablaUno]", r.TargetTable);
+            Assert.Equal(2, r.SourceTables.Count);
+            Assert.Contains("[tablaDos]", r.SourceTables);
+            Assert.Contains("[tablaTres]", r.SourceTables);
+            Assert.True(r.HasWhereClause);
         }
         [Fact]
         public void InsertSelectFrom3UnionAllTables()
@@ -35,6 +58,7 @@ namespace LKParserTests
             Assert.Contains("[tablaDos]", r.SourceTables);
             Assert.Contains("[tablaTres]", r.SourceTables);
             Assert.Contains("[tablaCuatro]", r.SourceTables);
+            Assert.False(r.HasWhereClause);
         }
         [Fact]
         public void InsertValues()
@@ -43,6 +67,7 @@ namespace LKParserTests
             ParseResults r = pParser.Parse("INSERT INTO tablaUno VALUES (1, 2, 3)");
             Assert.Equal("[tablaUno]", r.TargetTable);
             Assert.Empty(r.SourceTables);
+            Assert.False(r.HasWhereClause);
         }
         [Fact]
         public void UpdateSet()
@@ -51,6 +76,16 @@ namespace LKParserTests
             ParseResults r = pParser.Parse("UPDATE tablaUno SET c1 = 1, c2 = 2");
             Assert.Equal("[tablaUno]", r.TargetTable);
             Assert.Empty(r.SourceTables);
+            Assert.False(r.HasWhereClause);
+        }
+        [Fact]
+        public void UpdateSetWhere()
+        {
+            Parser pParser = new Parser();
+            ParseResults r = pParser.Parse("UPDATE tablaUno SET c1 = 1, c2 = 2 WHERE c4 > 'Sample'");
+            Assert.Equal("[tablaUno]", r.TargetTable);
+            Assert.Empty(r.SourceTables);
+            Assert.True(r.HasWhereClause);
         }
         [Fact]
         public void UpdateSelectFrom2InnerJoinTables()
@@ -61,6 +96,7 @@ namespace LKParserTests
             Assert.Equal(2, r.SourceTables.Count);
             Assert.Contains("[tablaUno]", r.SourceTables);
             Assert.Contains("[tablaDos]", r.SourceTables);
+            Assert.False(r.HasWhereClause);
         }
         [Fact]
         public void SelectFrom3LeftJoinTables()
@@ -72,6 +108,7 @@ namespace LKParserTests
             Assert.Contains("[myserver].[mydatabase].[dbo].[tablaUno]", r.SourceTables);
             Assert.Contains("[tablaDos]", r.SourceTables);
             Assert.Contains("[tablaTres]", r.SourceTables);
+            Assert.False(r.HasWhereClause);
         }
         [Fact]
         public void SelectInto()
@@ -81,6 +118,7 @@ namespace LKParserTests
             Assert.Equal("[tablaUno]", r.TargetTable);
             Assert.Single(r.SourceTables);
             Assert.Contains("[tablaDos]", r.SourceTables);
+            Assert.False(r.HasWhereClause);
         }
 
     }

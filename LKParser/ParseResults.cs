@@ -10,6 +10,6 @@ namespace LKPocParser
     {
         public string TargetTable { get; set; }
         public HashSet<string> SourceTables { get; set; }
-
+        public bool HasWhereClause { get; set; }
     }
 }

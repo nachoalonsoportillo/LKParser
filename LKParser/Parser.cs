@@ -19,7 +19,7 @@ namespace LKPocParser
             var visitor = new Visitor();
             sqlTree.Accept(visitor);
 
-            return new ParseResults() { TargetTable = visitor.TargetTable, SourceTables = visitor.SourceTables };
+            return new ParseResults() { HasWhereClause = visitor.HasWhereClause, TargetTable = visitor.TargetTable, SourceTables = visitor.SourceTables };
         }
     }
 }

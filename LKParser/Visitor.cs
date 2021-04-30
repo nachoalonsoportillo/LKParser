@@ -15,9 +15,13 @@ namespace LKPocParser
         {
             SourceTables = new HashSet<string>();
             TargetTable = "";
+            HasWhereClause = false;
         }
         public HashSet<string> SourceTables { get; set; }
         public string TargetTable { get; set; }
+
+        public bool HasWhereClause { get; set; }
+
         private string QualifiedName(SchemaObjectName name)
         {
             bool AnyPartSet = false;
@@ -57,13 +61,49 @@ namespace LKPocParser
             Debug.Assert(nestingLevel < 10, "Maximum recursion level exceeded.");
             switch (node)
             {
-                case NamedTableReference nt:
-                    SourceTables.Add(QualifiedName(nt.SchemaObject));
+                case InsertStatement insSt:
+                    Traverse(insSt.InsertSpecification, ++nestingLevel);
                     break;
-
+                case InsertSpecification ins:
+                    if (ins.Target is NamedTableReference)
+                    {
+                        TargetTable = QualifiedName(((NamedTableReference)(ins.Target)).SchemaObject);
+                    }
+                    if (ins.InsertSource is SelectInsertSource)
+                    {
+                        Traverse(((SelectInsertSource)ins.InsertSource).Select, ++nestingLevel);
+                    }
+                    break;
+                case UpdateStatement updSt:
+                    Traverse(updSt.UpdateSpecification, ++nestingLevel);
+                    break;
+                case UpdateSpecification us:
+                    if (us.Target is NamedTableReference)
+                    {
+                        TargetTable = QualifiedName(((NamedTableReference)(us.Target)).SchemaObject);
+                    }
+                    if (us.FromClause != null)
+                    {
+                        Traverse(((FromClause)us.FromClause).TableReferences[0], ++nestingLevel);
+                    }
+                    if (us.WhereClause != null)
+                    {
+                        HasWhereClause = true;
+                    }
+                    break;
+                case SelectStatement selSt:
+                    if (selSt.Into != null)
+                    {
+                        TargetTable = QualifiedName(selSt.Into);
+                    }
+                    Traverse(((QuerySpecification)(selSt.QueryExpression)), ++nestingLevel);
+                    break;
                 case QuerySpecification qs:
+                    if (qs.WhereClause != null)
+                    {
+                        HasWhereClause = true;
+                    }
                     Traverse(qs.FromClause.TableReferences[0], ++nestingLevel);
-
                     break;
                 case UnqualifiedJoin uj:
                     Traverse(uj.FirstTableReference, ++nestingLevel);
@@ -77,6 +117,9 @@ namespace LKPocParser
                     Traverse(bqs.FirstQueryExpression, ++nestingLevel);
                     Traverse(bqs.SecondQueryExpression, ++nestingLevel);
                     break;
+                case NamedTableReference nt:
+                    SourceTables.Add(QualifiedName(nt.SchemaObject));
+                    break;
                 default:
                     Debug.Assert(false, "This node type is not implemented yet!!!");
                     break;
@@ -86,35 +129,17 @@ namespace LKPocParser
 
         public override void Visit(InsertStatement node)
         {
-            if (node.InsertSpecification.Target is NamedTableReference)
-            {
-                TargetTable = QualifiedName(((NamedTableReference)(node.InsertSpecification.Target)).SchemaObject);
-            }
-            if (node.InsertSpecification.InsertSource is SelectInsertSource)
-            {
-                Traverse(((SelectInsertSource)node.InsertSpecification.InsertSource).Select, 1);
-            }
+            Traverse(node, 1);
         }
 
         public override void Visit(UpdateStatement node)
         {
-            if (node.UpdateSpecification.Target is NamedTableReference)
-            {
-                TargetTable = QualifiedName(((NamedTableReference)(node.UpdateSpecification.Target)).SchemaObject);
-            }
-            if (node.UpdateSpecification.FromClause != null)
-            {
-                Traverse(((FromClause)node.UpdateSpecification.FromClause).TableReferences[0], 1);
-            }
+            Traverse(node, 1);
         }
 
         public override void Visit(SelectStatement node)
         {
-            if (node.Into != null)
-            {
-                TargetTable = QualifiedName(node.Into);
-            }
-            Traverse(((QuerySpecification)(node.QueryExpression)), 1);
+            Traverse(node, 1);
         }
     }
 
