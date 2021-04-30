@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("LKParserTest")]
+[assembly: AssemblyTitle("LKParser")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("LKParserTest")]
+[assembly: AssemblyProduct("LKParser")]
 [assembly: AssemblyCopyright("Copyright ©  2021")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("28b03ef7-f8b2-427e-aa12-d3ff1b1212bb")]
+[assembly: Guid("e58d6cc4-1901-457a-b4fe-bbe04c746990")]
 
 // Version information for an assembly consists of the following four values:
 //
