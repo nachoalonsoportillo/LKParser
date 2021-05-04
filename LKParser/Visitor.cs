@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,19 +9,27 @@ using System.Diagnostics;
 
 namespace LKPocParser
 {
-
+    [Flags]
+    public enum Features
+    {
+        None = 0,
+        HasWhereClause = 1,
+        UpdateTargetPointsToAlias = 2
+    }
     internal class Visitor : TSqlFragmentVisitor
     {
         public Visitor()
         {
-            SourceTables = new HashSet<string>();
+            SourceTables = new ArrayList();
+            Alias = new ArrayList();
             TargetTable = "";
-            HasWhereClause = false;
+            StatementFeatures = Features.None;
         }
-        public HashSet<string> SourceTables { get; set; }
+        public ArrayList SourceTables { get; set; }
+        public ArrayList Alias { get; set; }
         public string TargetTable { get; set; }
 
-        public bool HasWhereClause { get; set; }
+        internal Features StatementFeatures;
 
         private string QualifiedName(SchemaObjectName name)
         {
@@ -86,9 +95,20 @@ namespace LKPocParser
                     {
                         Traverse(((FromClause)us.FromClause).TableReferences[0], ++nestingLevel);
                     }
+                    if (
+                        us.Target is NamedTableReference
+                        && ((NamedTableReference)(us.Target)).SchemaObject.ServerIdentifier == null
+                        && ((NamedTableReference)(us.Target)).SchemaObject.DatabaseIdentifier == null
+                        && ((NamedTableReference)(us.Target)).SchemaObject.SchemaIdentifier == null
+                        && Alias.BinarySearch(TargetTable) > 0
+                        )
+                    {
+                        TargetTable = SourceTables[Alias.BinarySearch(TargetTable)].ToString();
+                        FlagsHelper.Set(ref StatementFeatures, Features.UpdateTargetPointsToAlias);
+                    }
                     if (us.WhereClause != null)
                     {
-                        HasWhereClause = true;
+                        FlagsHelper.Set(ref StatementFeatures, Features.HasWhereClause);
                     }
                     break;
                 case SelectStatement selSt:
@@ -101,7 +121,7 @@ namespace LKPocParser
                 case QuerySpecification qs:
                     if (qs.WhereClause != null)
                     {
-                        HasWhereClause = true;
+                        FlagsHelper.Set(ref StatementFeatures, Features.HasWhereClause);
                     }
                     Traverse(qs.FromClause.TableReferences[0], ++nestingLevel);
                     break;
@@ -119,6 +139,7 @@ namespace LKPocParser
                     break;
                 case NamedTableReference nt:
                     SourceTables.Add(QualifiedName(nt.SchemaObject));
+                    Alias.Add(string.Format("[{0}]", nt.Alias != null ? nt.Alias.Value : ""));
                     break;
                 default:
                     Debug.Assert(false, "This node type is not implemented yet!!!");

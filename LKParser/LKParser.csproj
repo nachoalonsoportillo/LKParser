@@ -59,6 +59,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FlagsHelper.cs" />
     <Compile Include="Parser.cs" />
     <Compile Include="ParseResults.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
