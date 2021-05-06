@@ -1,11 +1,19 @@
 using System;
 using Xunit;
 using LKPocParser;
+using Microsoft.SqlServer.TransactSql.ScriptDom;
 
 namespace LKParserTests
 {
     public class ParserUnitTests
     {
+        [Fact]
+        public void IncorrectSyntax()
+        {
+            Parser pParser = new Parser();
+            ParserException exception = Assert.Throws<ParserException>(() => pParser.Parse("INSERT ONTO tablaUno SELECT * FROM tablaDos as t2"));
+            Assert.Equal(46010, ((ParseError)(exception.Errors[0])).Number);
+        }
         [Fact]
         public void InsertSelectFrom1Table()
         {
