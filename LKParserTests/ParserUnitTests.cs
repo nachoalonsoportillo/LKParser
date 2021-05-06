@@ -96,11 +96,10 @@ namespace LKParserTests
             Assert.True(FlagsHelper.IsSet(r.StatementFeatures, Features.HasWhereClause));
         }
         [Fact]
-        public void UpdateSelectFrom2InnerJoinTables()
+        public void UpdateTargetPointingToAliasSelectFrom2InnerJoinTables()
         {
             Parser pParser = new Parser();
             ParseResults r = pParser.Parse("UPDATE AliasDos set columna1 = 3 FROM tablaUno as Alias INNER JOIN tablaDos as AliasDos on tablaUno.ccolumna1= tablaDos.columna1");
-            //ParseResults r = pParser.Parse("UPDATE Alias set columna1 = 3 FROM tablaUno as Alias INNER JOIN tablaDos on tablaUno.ccolumna1= tablaDos.columna1");
             Assert.Equal("[tablaDos]", r.TargetTable);
             Assert.Equal(2, r.SourceTables.Count);
             Assert.Contains("[tablaUno]", r.SourceTables.ToArray());
