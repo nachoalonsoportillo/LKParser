@@ -19,9 +19,6 @@ alter database LaboralKutxa set trustworthy on
 go
 use LaboralKutxa
 go
-create assembly [Microsoft.SqlServer.TransactSql.ScriptDom] from '<Ruta>\Microsoft.SqlServer.TransactSql.ScriptDom.dll'
-with permission_set = unsafe
-
 create assembly LKParser from '<Ruta>\LKParser.dll'
 with permission_set = unsafe
 
